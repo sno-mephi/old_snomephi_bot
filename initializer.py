@@ -16,7 +16,7 @@ import config
 
 tran_tagname = {'maths': 'Математика', 'engineering': 'Инженерия', 'science': 'Естественные науки', 'it': 'IT', 
                 'clubs': 'Кружки и клубы', 'conference': 'Конференции', 'olympiad': 'Олимпиады', 'education': 'Образовательные мероприятия',
-                'popsci': 'Научно-популярные мероприятия', 'tours': 'Экскурсии'}
+                'popsci': 'Научно-популярные мероприятия', 'tours': 'Экскурсии', 'scientific_seminars': 'Научные семинары'}
 
 
 TOKEN = config.TOKEN
