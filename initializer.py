@@ -35,7 +35,7 @@ if "--testing" in sys.argv:
     channel_id = -1002057270905
     author_id = 920061911
     logchat_id = -1002057270905
-    db_path = "db_testing"
+    db_path = "db_test"
 
 
 # setting up data storage
