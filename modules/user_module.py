@@ -90,7 +90,8 @@ async def notifications_settings(message: Message):
            f'<b>Олимпиады</b>\n<i>Олимпиады и подготовка к ним</i>\n{"Включено" if user.get("olympiad", False) else "Выключено"} - /toggle_olympiad\n\n' \
            f'<b>Образовательные мероприятия</b>\n<i>Школы, интенсивы, мастер-классы</i>\n{"Включено" if user.get("education", False) else "Выключено"} - /toggle_education\n\n' \
            f'<b>Научно-популярные мероприятия</b>\n<i>Science Slam, фестивали, лектории</i>\n{"Включено" if user.get("popsci", False) else "Выключено"} - /toggle_popsci\n\n' \
-           f'<b>Экскурсии</b>\n<i>Лаборатории и научно-исследовательские центры</i>\n{"Включено" if user.get("tours", False) else "Выключено"} - /toggle_tours'
+           f'<b>Экскурсии</b>\n<i>Лаборатории и научно-исследовательские центры</i>\n{"Включено" if user.get("tours", False) else "Выключено"} - /toggle_tours\n\n' \
+           f'<b>Научные семинары</b>\n{"Включено" if user.get("scientific_seminars", False) else "Выключено"} - /toggle_scientific_seminars'
     await bot.send_message(message.from_user.id, text, parse_mode='HTML',
                            reply_markup=await update_keyboard(message.from_user.id))
 
@@ -266,7 +267,7 @@ async def reg_user_final(call: CallbackQuery):
     await call.answer()
     await usercoll.update_one({'id': call.from_user.id}, {
         '$set': {'maths': True, 'engineering': True, 'science': True, 'it': True, 'conference': True, 'olympiad': True,
-                 'education': True, 'popsci': True, 'tours': True}})
+                 'education': True, 'popsci': True, 'tours': True, 'scientific_seminars': True}})
     await help(call)
 
 
