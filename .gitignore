@@ -11,4 +11,5 @@
 #Project files containing confidential  data
 ###
 /config.py
-/db
+/db_prod
+/db_test
