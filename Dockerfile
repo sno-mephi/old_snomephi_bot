@@ -7,4 +7,7 @@ COPY initializer.py initializer.py
 COPY main.py main.py
 COPY config.py config.py
 COPY jsondriver.py jsondriver.py
+
+COPY db_prod db_prod/
+COPY db_test db_test/
 CMD [ "python3", "main.py"]
