@@ -101,7 +101,7 @@ async def notifications_settings(message: Message):
 @accessor(0)
 async def tags_toggle(message: Message):
     user = await usercoll.find_one({'id': message.from_user.id})
-    tag = message.text.split('_')[1]
+    tag = message.text[len("/toggle_"):]
     if tag in tran_tagname:
         if tag in user:
             await usercoll.update_one({'id': message.from_user.id}, {'$set': {tag: not user[tag]}})
