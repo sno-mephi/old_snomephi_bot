@@ -1,10 +1,18 @@
 """
 This part is where all the internal variables and storages are being unitedly initialized for usage in other modules.
 """
+from types import FunctionType
+from typing import List, Union, Tuple, Dict
+import time
 import aiogram
-import jsondriver
-import config
+from aiogram.types import *
+import asyncio
+import aiohttp
 import sys
+import os
+import jsondriver
+import datetime
+import config
 
 tran_tagname = {'maths': 'Математика', 'engineering': 'Инженерия', 'science': 'Естественные науки', 'it': 'IT', 
                 'clubs': 'Кружки и клубы', 'conference': 'Конференции', 'olympiad': 'Олимпиады', 'education': 'Образовательные мероприятия',
