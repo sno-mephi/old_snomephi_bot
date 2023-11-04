@@ -60,7 +60,7 @@ class AsyncJsonCollection:
                 with open(file_path, 'r') as file:
                     self.__json = json.load(file)
             except FileNotFoundError:
-                file = open(file_path, 'w')
+                file = open(file_path, 'w+')
                 file.write('{}')
                 file.close()
                 self.__init__(file_path)
