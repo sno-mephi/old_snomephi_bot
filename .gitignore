@@ -1,0 +1,14 @@
+﻿###
+#IDEA settings
+###
+/.vs
+/.idea/
+/__pycache__/
+
+
+
+###
+#Project files containing confidential  data
+###
+/config.py
+/db
