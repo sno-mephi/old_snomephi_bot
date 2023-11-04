@@ -12,7 +12,6 @@ tran_tagname = {'maths': 'Математика', 'engineering': 'Инженер�
 
 
 TOKEN = config.TOKEN
-TOKEN_TEST = config.TOKEN_TEST
 
 bot = aiogram.Bot(TOKEN)
 dp = aiogram.Dispatcher(bot)
