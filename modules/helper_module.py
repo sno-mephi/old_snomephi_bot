@@ -170,8 +170,8 @@ async def gen_alert_creator_button_preview(uid: int, bid: int) -> Tuple[str, Inl
 async def update_keyboard(uid: int) -> ReplyKeyboardMarkup:
     user = await usercoll.find_one({'id': uid})
     keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
-    keyboard.row('Мероприятия недели', 'Настройка рассылки')
-    keyboard.row('Кружки')
+    keyboard.row('Мероприятия недели')
+    keyboard.row('Настройка рассылки')
     if 'access_level' in user:
         keyboard.row('Рассылка уведомлений')
     return keyboard
