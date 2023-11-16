@@ -14,6 +14,7 @@ STATUS_CREATOR = 'salert_creator'
 STATUS_SENDING_PHOTO = 'salert_creator sending photo'
 STATUS_WRITING_TEXT = 'salert_creator writing text'
 STATUS_NAMING_BUTTON = 'salert naming but'
+STATUS_LINKING_BUTTON = 'salert linking but'
 STATUS_SENDING_TIME = 'salert sending time'
 
 
@@ -85,7 +86,8 @@ async def build_main_message(salert: dict):
     )
 
     if salert['buttons'] is not None:
-        keyboard.add(*[InlineKeyboardButton(text=button["title"], url=button["link"]) for button in salert['buttons']])
+        keyboard.add(*[InlineKeyboardButton(text=button["title"], callback_data=f'salert_creators button_preview?id={salert["buttons"].index(button)}') for button in salert['buttons']])
+        #keyboard.add(*[InlineKeyboardButton(text=button["title"], url=button["link"]) for button in salert['buttons']])
 
     if salert['text'] is not None:
         keyboard.add(InlineKeyboardButton(text='Предпросмотр', callback_data='alert_creator preview'))

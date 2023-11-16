@@ -167,6 +167,27 @@ async def gen_alert_creator_button_preview(uid: int, bid: int) -> Tuple[str, Inl
     return text, keyboard
 
 
+async def gen_salert_creator_button_preview(uid: int, bid: int) -> Tuple[str, InlineKeyboardMarkup]:
+    user = await usercoll.find_one({'id': uid})
+    text = ''
+    keyboard = InlineKeyboardMarkup(row_width=1)
+    if user['salert']['buttons'][bid]['title'] is None:
+        keyboard.add(InlineKeyboardButton(text='Добавить текст на кнопку', callback_data=f'salert_creators name_button?id={bid}'))
+        text += '<b>Текст на кнопке</b>: <i>не задан</i>\n'
+    else:
+        keyboard.add(InlineKeyboardButton(text='Изменить текст на кнопке', callback_data=f'salert_creators name_button?id={bid}'))
+        text += f'<b>Текст на кнопке</b>: {user["salert"]["buttons"][bid]["title"]}\n'
+    if user['salert']['buttons'][bid]['link'] is None:
+        keyboard.add(InlineKeyboardButton(text='Добавить ссылку', callback_data=f'salert_creators url_button?id={bid}'))
+        text += '<b>Ссылка</b>: <i>не задан</i>\n'
+    else:
+        keyboard.add(InlineKeyboardButton(text='Изменить ссылку', callback_data=f'salert_creators url_button?id={bid}'))
+        text += f"<b>Ссылка</b>: {user['salert']['buttons'][bid]['link']}\n"
+    keyboard.add(InlineKeyboardButton(text='Удалить кнопку', callback_data=f'salert_creators delete_button?id={bid}'),
+                 InlineKeyboardButton(text='Назад', callback_data=PATH_MAIN))
+    return text, keyboard
+
+
 async def update_keyboard(uid: int) -> ReplyKeyboardMarkup:
     user = await usercoll.find_one({'id': uid})
     keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
