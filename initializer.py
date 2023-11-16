@@ -8,10 +8,14 @@ import aiogram
 from aiogram.types import *
 import asyncio
 import aiohttp
+import pytz
+import re
+from datetime import datetime
 import sys
 import os
 import jsondriver
 import datetime
+from salert_utils import *
 import config
 
 tran_tagname = {'maths': 'Математика', 'engineering': 'Инженерия', 'science': 'Естественные науки', 'it': 'IT', 
@@ -41,8 +45,5 @@ if "--testing" in sys.argv:
 # setting up data storage
 usercoll = jsondriver.AsyncJsonCollection(file_path=db_path+'/usercoll.json')
 postcoll = jsondriver.AsyncJsonCollection(file_path=db_path+"/postcoll.json")
-
-# setting up data storage
-usercoll = jsondriver.AsyncJsonCollection(file_path=db_path+'/usercoll.json')
-postcoll = jsondriver.AsyncJsonCollection(file_path=db_path+"/postcoll.json")
+salerts = jsondriver.AsyncJsonCollection(file_path=db_path+'/salerts.json')    # бд рассылок по таймеру
 

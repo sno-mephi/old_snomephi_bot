@@ -172,6 +172,36 @@ async def parse_text_message(message: Message):
             await bot.edit_message_text(chat_id=message.from_user.id, message_id=user['status'][1], text=text,
                                         parse_mode='HTML', reply_markup=keyboard)
             await message.delete()
+
+        elif STATUS_SENDING_TIME in user['status'][0]:
+            salert = user['salert']
+            time_str = message.text
+            await message.delete()
+            is_valid = await is_valid_time(time_str)
+            if not is_valid:
+                keyboard = InlineKeyboardMarkup(row_width=1)
+                keyboard.add(InlineKeyboardButton(text='Назад', callback_data=PATH_MAIN))
+                new_text = 'Некорректный формат.\nОтправьте ответным сообщением время в формате "dd.mm.yyyy hh:mm"'
+                await bot.edit_message_text(chat_id=message.from_user.id, message_id=user['status'][1], text=new_text, reply_markup=keyboard)
+            else:
+                is_valid = await is_correct_time(time_str)
+                if not is_valid:
+                    keyboard = InlineKeyboardMarkup(row_width=1)
+                    keyboard.add(InlineKeyboardButton(text='Назад', callback_data=PATH_MAIN))
+                    new_text = 'Слишком ранняя дата.\nОтправьте ответным сообщением время в формате "dd.mm.yyyy hh:mm", причем это время должно превышать текущее.'
+                    await bot.edit_message_text(chat_id=message.from_user.id, message_id=user['status'][1],
+                                                text=new_text, reply_markup=keyboard)
+                else:
+                    salert['time'] = time_str
+                    await usercoll.update_one({'id': message.from_user.id}, {'$set': {'salert': salert}})
+                    text, keyboard, photo = await build_main_message(salert)
+                    if photo is None:
+                        await bot.edit_message_text(chat_id=message.from_user.id, message_id=user['status'][1], reply_markup=keyboard, text=text, parse_mode='HTML')
+                    else:
+                        await message.delete()
+                        msg = await bot.send_photo(message.from_user.id, photo, text, parse_mode='HTML', reply_markup=keyboard)
+                        await usercoll.update_one({'id': message.from_user.id}, {'$set': {'status.1': msg.message_id}})
+
     elif user is not None and 'name' not in user:
         keyboard = InlineKeyboardMarkup(row_width=1)
         keyboard.add(InlineKeyboardButton(text='Все верно', callback_data='reg_successful'),
