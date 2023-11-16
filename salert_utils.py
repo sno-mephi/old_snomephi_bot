@@ -3,16 +3,16 @@ from datetime import datetime
 import pytz
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-PATCH_CHANGE_PHOTO = 'salert_creator change_photo'
-PATCH_DELETE_PHOTO = 'salert_creator delete_photo'
-PATCH_CHANGE_TEXT = 'salert_creator change_text'
-PATCH_ADD_BUTTON = 'salert_creator add_button'
-PATCH_CHANGE_TIME = 'salert_creator change_time'
-PATH_MAIN = 'salert-creator main'
+PATCH_CHANGE_PHOTO = 'salert_creators change_photo'
+PATCH_DELETE_PHOTO = 'salert_creators delete_photo'
+PATCH_CHANGE_TEXT = 'salert_creators change_text'
+PATCH_ADD_BUTTON = 'salert_creators add_button'
+PATCH_CHANGE_TIME = 'salert_creators change_time'
+PATH_MAIN = 'salert-creators main'
 
-STATUS_CREATOR = 'salert_creator'
-STATUS_SENDING_PHOTO = 'salert_creator sending photo'
-STATUS_WRITING_TEXT = 'salert_creator writing text'
+STATUS_CREATOR = 'salert_creators'
+STATUS_SENDING_PHOTO = 'salert_creators sending photo'
+STATUS_WRITING_TEXT = 'salert_creators writing text'
 STATUS_NAMING_BUTTON = 'salert naming but'
 STATUS_LINKING_BUTTON = 'salert linking but'
 STATUS_SENDING_TIME = 'salert sending time'
