@@ -19,6 +19,7 @@ STATUS_SENDING_TIME = 'salert sending time'
 SET_SALERT_NAME = 'salerts set job name'
 WRITING_SALERT_NAME = 'job waiting salert name'
 SALERT_CREATE_PLAN = 'salert planning add'
+SALERTS_JOBS_LIST_CALLBACK = 'salerts list callback'
 
 
 # проверяет что строка удовлетворяет формату "dd.mm.yyyy hh:mm"
@@ -117,11 +118,12 @@ async def build_main_message(salert: dict):
         )
     )
 
+    # TODO: добавить редактирование!
     if await can_finish(salert):
         if salert['name'] is None:
             keyboard.add(InlineKeyboardButton(text='Установить имя задачи', callback_data=SET_SALERT_NAME))
         else:
-            keyboard.add(InlineKeyboardButton(text='Опубликовать задачу', callback_data=SALERT_CREATE_PLAN))
+            keyboard.add(InlineKeyboardButton(text='Поставить в очередь! (нелья редачить)', callback_data=SALERT_CREATE_PLAN))
             text += f"\n\nИмя отложенной задачи: {salert['name']}"
 
     keyboard.add(InlineKeyboardButton(text='Отмена', callback_data='reset_status'))

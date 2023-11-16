@@ -246,9 +246,11 @@ async def parse_text_message(message: Message):
                 await usercoll.update_one({'id': message.from_user.id}, {'$set': {'status.1': msg.message_id}})
             await message.delete()
 
+        # TODO: обработать случай НЕуникальности
         elif user['status'][0] == WRITING_SALERT_NAME:
+            job_name = message.text.lower()
             user['status'][0] = PATH_MAIN
-            user['salert']['name'] = message.text
+            user['salert']['name'] = job_name
             await usercoll.update_one({'id': message.from_user.id}, user)
             text, keyboard, photo = await build_main_message(user['salert'])
             if photo is None:
