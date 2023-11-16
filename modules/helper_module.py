@@ -195,4 +195,5 @@ async def update_keyboard(uid: int) -> ReplyKeyboardMarkup:
     keyboard.row('Настройка рассылки')
     if 'access_level' in user:
         keyboard.row('Рассылка уведомлений')
+        keyboard.row('Рассылка по таймеру')
     return keyboard
