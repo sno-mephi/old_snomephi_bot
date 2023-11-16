@@ -232,6 +232,20 @@ async def parse_text_message(message: Message):
                                         parse_mode='HTML', reply_markup=keyboard)
             await message.delete()
 
+        elif user['status'][0] == STATUS_WRITING_TEXT:
+            user['status'][0] = PATH_MAIN
+            user['salert']['text'] = message.text
+            await usercoll.update_one({'id': message.from_user.id}, user)
+            text, keyboard, photo = await build_main_message(user['salert'])
+            if photo is None:
+                await bot.edit_message_text(chat_id=message.from_user.id, message_id=user['status'][1], text=text,
+                                            parse_mode='HTML', reply_markup=keyboard)
+            else:
+                await bot.delete_message(message.from_user.id, user['status'][1])
+                msg = await bot.send_photo(message.from_user.id, photo, text, parse_mode="HTML", reply_markup=keyboard)
+                await usercoll.update_one({'id': message.from_user.id}, {'$set': {'status.1': msg.message_id}})
+            await message.delete()
+
     elif user is not None and 'name' not in user:
         keyboard = InlineKeyboardMarkup(row_width=1)
         keyboard.add(InlineKeyboardButton(text='Все верно', callback_data='reg_successful'),
@@ -303,6 +317,16 @@ async def parse_photo_message(message: Message):
         msg = await bot.send_photo(message.from_user.id, photo, text, parse_mode="HTML", reply_markup=keyboard)
         await usercoll.update_one({'id': message.from_user.id},
                                   {'$set': {'status.0': 'alert_creator', 'status.1': msg.message_id}})
+        await message.delete()
+    elif user is not None and 'status' in user and user['status'][0] == STATUS_SENDING_PHOTO:
+        user['salert']['photo'] = message.photo[0].file_id
+        await usercoll.update_one({'id': message.from_user.id}, user)
+        text, keyboard, photo = await build_main_message(user['salert'])
+        await bot.delete_message(message.from_user.id, user['status'][1])
+
+        msg = await bot.send_photo(message.from_user.id, photo, text, parse_mode="HTML", reply_markup=keyboard)
+        await usercoll.update_one({'id': message.from_user.id},
+                                  {'$set': {'status.0': PATH_MAIN, 'status.1': msg.message_id}})
         await message.delete()
     else:
         await parse_incompatible_message(message)
