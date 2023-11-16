@@ -13,3 +13,7 @@
 /config.py
 /db_prod
 /db_test
+
+
+# просто рофло-файл
+/test.py

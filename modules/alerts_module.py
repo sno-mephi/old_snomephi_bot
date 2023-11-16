@@ -3,10 +3,9 @@ This module is used to create event alerts and send it to active users of bot.
 """
 from modules.helper_module import *
 
-
 @dp.message_handler(commands=['new_alert'])
 @dp.message_handler(lambda message: message.text == 'Рассылка уведомлений')
-@accessor(1)
+@accessor(1)#
 async def alert_creator_main_text(message: Message):
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(InlineKeyboardButton(text='Добавить фото', callback_data='alert_creator change_photo'),
@@ -18,7 +17,7 @@ async def alert_creator_main_text(message: Message):
 
 
 @dp.callback_query_handler(lambda call: call.data == 'alert_creator main')
-@accessor(1)
+@accessor(1)#
 async def alert_creator_main_call(call: CallbackQuery):
     await usercoll.update_one({'id': call.from_user.id}, {'$set': {'status.0': 'alert_creator'}})
     text, keyboard, photo = await gen_alert_creator_main_message(call.from_user.id)
@@ -32,7 +31,7 @@ async def alert_creator_main_call(call: CallbackQuery):
 
 
 @dp.callback_query_handler(lambda call: call.data == 'alert_creator change_photo')
-@accessor(1)
+@accessor(1)#
 async def alert_creator_change_photo(call: CallbackQuery):
     await usercoll.update_one({'id': call.from_user.id}, {'$set': {'status.0': 'alert_creator sending_photo'}})
     user = await usercoll.find_one({'id': call.from_user.id})
@@ -48,7 +47,7 @@ async def alert_creator_change_photo(call: CallbackQuery):
 
 
 @dp.callback_query_handler(lambda call: call.data == 'alert_creator delete_photo')
-@accessor(1)
+@accessor(1)#
 async def alert_creator_delete_photo(call: CallbackQuery):
     await usercoll.update_one({'id': call.from_user.id}, {'$set': {'status.4': None}})
     text, keyboard, _ = await gen_alert_creator_main_message(call.from_user.id)
@@ -59,7 +58,7 @@ async def alert_creator_delete_photo(call: CallbackQuery):
 
 
 @dp.callback_query_handler(lambda call: call.data == 'alert_creator change_text')
-@accessor(1)
+@accessor(1)#
 async def alert_creator_text(call: CallbackQuery):
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(InlineKeyboardButton(text='Назад', callback_data='alert_creator main'))
@@ -77,7 +76,7 @@ async def alert_creator_text(call: CallbackQuery):
 
 
 @dp.callback_query_handler(lambda call: call.data == 'alert_creator add_button')
-@accessor(1)
+@accessor(1)#
 async def alert_creator_new_button(call: CallbackQuery):
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(InlineKeyboardButton(text='Назад', callback_data='alert_creator main'))
@@ -94,6 +93,7 @@ async def alert_creator_new_button(call: CallbackQuery):
     await call.answer()
 
 
+# в пизду
 @dp.callback_query_handler(lambda call: 'alert_creator button_preview' in call.data)
 @accessor(1)
 async def alert_creator_preview_button(call: CallbackQuery):
@@ -244,4 +244,141 @@ async def alert_creator_delete_button(call: CallbackQuery):
         await call.message.delete()
         msg = await bot.send_message(call.from_user.id, text, parse_mode="HTML", reply_markup=keyboard)
         await usercoll.update_one({"id": call.from_user.id}, {"$set": {'status.1': msg.message_id}})
+    await call.answer()
+
+
+# TODO: ВЕСЬ следующий код нужно вынести в отдельный модуль
+
+
+
+# TODO: ВСЕ НАХУЙ ПЕРЕДЕЛАТЬ ИЗ ХЕЛПЕР МОДУЛЯ
+# 'alert_creator change_photo' -> 'salert_creator change_photo'
+# 'alert_creator change_text' -> 'salert_creator change_text'
+# 'alert_creator add_button' -> 'salert_creator add_button'
+# 'reset_status' -> 'reset_salert_status'
+# 'alert_creator' -> 'salert_creator'
+
+@dp.message_handler(commands=['new_salert'])
+@dp.message_handler(lambda message: message.text == 'Рассылка по таймеру')
+@accessor(1)
+async def salert_creator_main_text(message: Message):
+    salert = {
+        'name': None,  # название задачки
+        'text': None,  # текст сообщения
+        'photo': None,  # фото
+        'buttons': None,  # кнопки в формате {'title':'some title', 'link': 'some-link.com'}
+        'time': None,  # время отправки в формате "dd.mm.yyyy hh:mm"
+    }
+
+    text, keyboard, photo = await build_main_message(salert)
+    msg = await bot.send_message(message.from_user.id, text=text, reply_markup=keyboard, parse_mode='HTML')
+
+    await usercoll.update_one(
+        {'id': message.from_user.id},
+        {
+            '$set': {
+                'status': [
+                    STATUS_CREATOR,  # 0 ставим статус
+                    msg.message_id,  # 1 id родительского сообщения
+                ],
+                'salert': salert
+            }
+        }
+    )
+
+
+@dp.callback_query_handler(lambda call: call.data == PATCH_ADD_BUTTON)
+@accessor(1)
+async def alert_creator_new_button(call: CallbackQuery):
+    keyboard = InlineKeyboardMarkup(row_width=1)
+    keyboard.add(InlineKeyboardButton(text='Назад', callback_data=PATH_MAIN))
+    user = await usercoll.find_one({'id': call.from_user.id})
+    if user['salert']['photo'] is None:
+        await call.message.edit_text('Отправьте текст на кнопке ответным сообщением.', reply_markup=keyboard)
+    else:
+        await call.message.delete()
+        msg = await bot.send_message(call.from_user.id, 'Отправьте текст на кнопке ответным сообщением.', reply_markup=keyboard)
+        await usercoll.update_one({'id': call.from_user.id}, {'$set': {'status.1': msg.message_id}})
+    user['status'][0] = f'{STATUS_NAMING_BUTTON}?id={len(user["salert"]["buttons"])}'
+    user['salert']['buttons'].append({'title': None, 'link': None})
+    await usercoll.update_one({'id': call.from_user.id}, user)
+    await call.answer()
+
+
+
+@dp.callback_query_handler(lambda call: call.data == PATCH_CHANGE_TEXT)
+@accessor(1)
+async def alert_creator_text(call: CallbackQuery):
+    keyboard = InlineKeyboardMarkup(row_width=1)
+    keyboard.add(InlineKeyboardButton(text='Назад', callback_data=PATH_MAIN))
+    user = await usercoll.find_one({'id': call.from_user.id})
+    if user['salert']['text'] is None:
+        await call.message.edit_text('Отправьте текст уведомления ответным сообщением.\n\n<b>Основные правила оформления</b>: стандартный HTML-код\n&lt;b&gt;текст&lt;/b&gt; — выделение полужирным\n&lt;i&gt;текст&lt;/i&gt; — выделение курсивом\n&lt;a href=&quot;ссылка&quot;&gt;текст&lt;/a&gt; — гиперссылка',
+                                     parse_mode='HTML', reply_markup=keyboard)
+        await usercoll.update_one({'id': call.from_user.id}, {'$set': {'status.0': STATUS_WRITING_TEXT}})
+    else:
+        await call.message.delete()
+        msg = await bot.send_message(call.from_user.id, 'Отправьте текст уведомления ответным сообщением.\n\n<b>Основные правила оформления</b>: стандартный HTML-код\n&lt;b&gt;текст&lt;/b&gt; — выделение полужирным\n&lt;i&gt;текст&lt;/i&gt; — выделение курсивом\n&lt;a href=&quot;ссылка&quot;&gt;текст&lt;/a&gt; — гиперссылка',
+                                    parse_mode='HTML', reply_markup=keyboard)
+        await usercoll.update_one({'id': call.from_user.id}, {'$set': {'status.0': STATUS_WRITING_TEXT, 'status.1': msg.message_id}})
+    await call.answer()
+
+@dp.callback_query_handler(lambda call: call.data == PATH_MAIN)
+@accessor(1)
+async def salert_creator_main_call(call: CallbackQuery):
+    user = await usercoll.find_one({'id': call.from_user.id})
+    salert = user['salert']
+    await usercoll.update_one({'id': call.from_user.id}, {'$set': {'status.0': STATUS_CREATOR}})
+    text, keyboard, photo = await build_main_message(salert)
+    if photo is None:
+        await call.message.edit_text(text, reply_markup=keyboard, parse_mode="HTML")
+    else:
+        await call.message.delete()
+        msg = await bot.send_photo(call.from_user.id, photo, text, parse_mode='HTML', reply_markup=keyboard)
+        await usercoll.update_one({'id': call.from_user.id}, {'$set': {'status.1': msg.message_id}})
+    await call.answer()
+
+
+@dp.callback_query_handler(lambda call: call.data == PATCH_CHANGE_PHOTO)
+@accessor(1)
+async def salert_creator_change_photo(call: CallbackQuery):
+    await usercoll.update_one({'id': call.from_user.id}, {'$set': {'status.0': STATUS_SENDING_PHOTO}})
+    user = await usercoll.find_one({'id': call.from_user.id})
+    keyboard = InlineKeyboardMarkup(row_width=1)
+    keyboard.add(InlineKeyboardButton(text='Назад', callback_data=PATH_MAIN))
+    if user['salert']['photo'] is None:
+        await call.message.edit_text('Отправьте фото, прикрепляемое к уведомлению, ответным сообщением.', reply_markup=keyboard)
+    else:
+        await call.message.delete()
+        msg = await bot.send_message(call.from_user.id, 'Отправьте фото, прикрепляемое к уведомлению, ответным сообщением.', reply_markup=keyboard)
+        await usercoll.update_one({'id': call.from_user.id}, {'$set': {'status.1': msg.message_id}})
+    await call.answer()
+
+
+@dp.callback_query_handler(lambda call: call.data == PATCH_DELETE_PHOTO)
+@accessor(1)
+async def salert_creator_delete_photo(call: CallbackQuery):
+    salert = await usercoll.find_one({'id': call.from_user.id})['salert']
+    salert['photo'] = None
+    await usercoll.update_one({'id': call.from_user.id}, {'$set': {'salert': salert}})
+    text, keyboard, _ = await build_main_message(salert)
+    await call.message.delete()
+    msg = await bot.send_message(call.from_user.id, text, reply_markup=keyboard, parse_mode="HTML")
+    await usercoll.update_one({'id': call.from_user.id}, {'$set': {'status.1': msg.message_id}})
+    await call.answer()
+
+
+@dp.callback_query_handler(lambda call: call.data == PATCH_CHANGE_TIME)
+@accessor(1)
+async def salert_creator_change_time(call: CallbackQuery):
+    await usercoll.update_one({'id': call.from_user.id}, {'$set': {'status.0': STATUS_SENDING_TIME}})
+    user = await usercoll.find_one({'id': call.from_user.id})
+    keyboard = InlineKeyboardMarkup(row_width=1)
+    keyboard.add(InlineKeyboardButton(text='Назад', callback_data=PATH_MAIN))
+    if user['salert']['photo'] is None:
+        await call.message.edit_text('Отправьте ответным сообщением время в формате "dd.mm.yyyy hh:mm"', reply_markup=keyboard)
+    else:
+        await call.message.delete()
+        msg = await bot.send_message(call.from_user.id, 'Отправьте ответным сообщением время в формате "dd.mm.yyyy hh:mm"', reply_markup=keyboard)
+        await usercoll.update_one({'id': call.from_user.id}, {'$set': {'status.1': msg.message_id}})
     await call.answer()
