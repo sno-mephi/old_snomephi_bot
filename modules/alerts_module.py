@@ -6,7 +6,7 @@ from modules.helper_module import *
 
 @dp.message_handler(commands=['new_alert'])
 @dp.message_handler(lambda message: message.text == 'Рассылка уведомлений')
-@accessor(1)  ##
+@accessor(1)
 async def alert_creator_main_text(message: Message):
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(InlineKeyboardButton(text='Добавить фото', callback_data='alert_creator change_photo'),
@@ -21,7 +21,7 @@ async def alert_creator_main_text(message: Message):
 
 
 @dp.callback_query_handler(lambda call: call.data == 'alert_creator main')
-@accessor(1)  ##
+@accessor(1)
 async def alert_creator_main_call(call: CallbackQuery):
     await usercoll.update_one({'id': call.from_user.id}, {'$set': {'status.0': 'alert_creator'}})
     text, keyboard, photo = await gen_alert_creator_main_message(call.from_user.id)
@@ -35,7 +35,7 @@ async def alert_creator_main_call(call: CallbackQuery):
 
 
 @dp.callback_query_handler(lambda call: call.data == 'alert_creator change_photo')
-@accessor(1)  ##
+@accessor(1)
 async def alert_creator_change_photo(call: CallbackQuery):
     await usercoll.update_one({'id': call.from_user.id}, {'$set': {'status.0': 'alert_creator sending_photo'}})
     user = await usercoll.find_one({'id': call.from_user.id})
@@ -54,7 +54,7 @@ async def alert_creator_change_photo(call: CallbackQuery):
 
 
 @dp.callback_query_handler(lambda call: call.data == 'alert_creator delete_photo')
-@accessor(1)  ##
+@accessor(1)
 async def alert_creator_delete_photo(call: CallbackQuery):
     await usercoll.update_one({'id': call.from_user.id}, {'$set': {'status.4': None}})
     text, keyboard, _ = await gen_alert_creator_main_message(call.from_user.id)
@@ -65,7 +65,7 @@ async def alert_creator_delete_photo(call: CallbackQuery):
 
 
 @dp.callback_query_handler(lambda call: call.data == 'alert_creator change_text')
-@accessor(1)  ##
+@accessor(1)
 async def alert_creator_text(call: CallbackQuery):
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(InlineKeyboardButton(text='Назад', callback_data='alert_creator main'))
@@ -86,7 +86,7 @@ async def alert_creator_text(call: CallbackQuery):
 
 
 @dp.callback_query_handler(lambda call: call.data == 'alert_creator add_button')
-@accessor(1)  ##
+@accessor(1)
 async def alert_creator_new_button(call: CallbackQuery):
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(InlineKeyboardButton(text='Назад', callback_data='alert_creator main'))
@@ -105,7 +105,7 @@ async def alert_creator_new_button(call: CallbackQuery):
 
 
 @dp.callback_query_handler(lambda call: 'alert_creator button_preview' in call.data)
-@accessor(1)##
+@accessor(1)
 async def alert_creator_preview_button(call: CallbackQuery):
     bid = int(call.data.split('?id=')[1])
     text, keyboard = await gen_alert_creator_button_preview(call.from_user.id, bid)
@@ -126,6 +126,7 @@ async def alert_creator_preview_full(call: CallbackQuery):
     await call.answer()
 
 
+# TODO: делать в salerts подобную штуку, но которая запрашивает УНИКАЛЬНОЕ имя рассылки
 @dp.callback_query_handler(lambda call: call.data == 'alert_creator alert_stage1')
 @accessor(1)
 async def alert_creator_alert_stage1(call: CallbackQuery):
@@ -210,7 +211,7 @@ async def alert_creator_alert_final(call: CallbackQuery):
 
 
 @dp.callback_query_handler(lambda call: 'alert_creator name_button' in call.data)
-@accessor(1)  ##
+@accessor(1)
 async def alert_creator_name_button(call: CallbackQuery):
     bid = int(call.data.split('?id=')[1])
     await usercoll.update_one({'id': call.from_user.id},
@@ -229,7 +230,7 @@ async def alert_creator_name_button(call: CallbackQuery):
 
 
 @dp.callback_query_handler(lambda call: 'alert_creator url_button' in call.data)
-@accessor(1)  ##
+@accessor(1)
 async def alert_creator_url_button(call: CallbackQuery):
     bid = int(call.data.split('?id=')[1])
     await usercoll.update_one({'id': call.from_user.id},
@@ -250,7 +251,7 @@ async def alert_creator_url_button(call: CallbackQuery):
 
 
 @dp.callback_query_handler(lambda call: 'alert_creator delete_button' in call.data)
-@accessor(1)##
+@accessor(1)
 async def alert_creator_delete_button(call: CallbackQuery):
     bid = int(call.data.split('?id=')[1])
     user = await usercoll.find_one({'id': call.from_user.id})
@@ -268,13 +269,6 @@ async def alert_creator_delete_button(call: CallbackQuery):
 
 # TODO: ВЕСЬ следующий код нужно вынести в отдельный модуль
 
-
-# TODO: ВСЕ НАХУЙ ПЕРЕДЕЛАТЬ ИЗ ХЕЛПЕР МОДУЛЯ
-# 'alert_creator change_photo' -> 'salert_creator change_photo'
-# 'alert_creator change_text' -> 'salert_creator change_text'
-# 'alert_creator add_button' -> 'salert_creator add_button'
-# 'reset_status' -> 'reset_salert_status'
-# 'alert_creator' -> 'salert_creator'
 
 @dp.message_handler(commands=['new_salert'])
 @dp.message_handler(lambda message: message.text == 'Рассылка по таймеру')
@@ -330,7 +324,7 @@ async def alert_creator_text(call: CallbackQuery):
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(InlineKeyboardButton(text='Назад', callback_data=PATH_MAIN))
     user = await usercoll.find_one({'id': call.from_user.id})
-    if user['salert']['text'] is None:
+    if user['salert']['photo'] is None:
         await call.message.edit_text(
             'Отправьте текст уведомления ответным сообщением.\n\n<b>Основные правила оформления</b>: стандартный HTML-код\n&lt;b&gt;текст&lt;/b&gt; — выделение полужирным\n&lt;i&gt;текст&lt;/i&gt; — выделение курсивом\n&lt;a href=&quot;ссылка&quot;&gt;текст&lt;/a&gt; — гиперссылка',
             parse_mode='HTML', reply_markup=keyboard)
@@ -383,7 +377,7 @@ async def salert_creator_change_photo(call: CallbackQuery):
 @dp.callback_query_handler(lambda call: call.data == PATCH_DELETE_PHOTO)
 @accessor(1)
 async def salert_creator_delete_photo(call: CallbackQuery):
-    salert = await usercoll.find_one({'id': call.from_user.id})['salert']
+    salert = (await usercoll.find_one({'id': call.from_user.id}))['salert']
     salert['photo'] = None
     await usercoll.update_one({'id': call.from_user.id}, {'$set': {'salert': salert}})
     text, keyboard, _ = await build_main_message(salert)
@@ -477,3 +471,14 @@ async def alert_creator_delete_button(call: CallbackQuery):
         await usercoll.update_one({"id": call.from_user.id}, {"$set": {'status.1': msg.message_id}})
     await call.answer()
 
+@dp.callback_query_handler(lambda call: call.data == 'salert_creators preview')
+@accessor(1)
+async def salert_creator_preview_full(call: CallbackQuery):
+    user = await usercoll.find_one({'id': call.from_user.id})
+    text, photo, keyboard = await build_salert_message(user['salert'])
+    keyboard.add(InlineKeyboardButton(text='Назад', callback_data=PATH_MAIN))
+    if photo is None:
+        await call.message.edit_text(text, parse_mode="HTML", reply_markup=keyboard, disable_web_page_preview=True)
+    else:
+        await call.message.edit_caption(text, parse_mode='HTML', reply_markup=keyboard)
+    await call.answer()

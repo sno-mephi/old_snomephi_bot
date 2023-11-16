@@ -31,11 +31,14 @@ async def is_valid_time(input_str) -> bool:
 async def can_finish(salert: dict) -> bool:
     return ((salert['text'] is not None) or (salert['photo'] is not None)) \
         and salert['name'] is not None \
+        and salert['time'] is not None \
         and await is_correct_time(salert['time'])
 
 
 # проверяет что время time меньше или равно чем текущее по мск
 async def is_correct_time(time_str: str) -> bool:
+    if time_str is None:
+        return False
     given_date = datetime.strptime(time_str, "%d.%m.%Y %H:%M")
     moscow_timezone = pytz.timezone('Europe/Moscow')
     current_date = datetime.now(moscow_timezone)
@@ -43,11 +46,14 @@ async def is_correct_time(time_str: str) -> bool:
     return current_date < given_date
 
 
-# возвращает text, keyboard
-# TODO: добавить возвращение фото
+# для построения сообщений салертов
+async def build_salert_message(salert: dict):
+    keyboard = InlineKeyboardMarkup(row_width=1)
+    keyboard.add(*[InlineKeyboardButton(text=button["title"], url=button["link"]) for button in salert['buttons']])
+    return salert['text'], salert['photo'], keyboard
+
 async def build_main_message(salert: dict):
     keyboard = InlineKeyboardMarkup(row_width=1)
-    photo = None
 
     keyboard.add(
         InlineKeyboardButton(
@@ -66,7 +72,6 @@ async def build_main_message(salert: dict):
                 callback_data=PATCH_DELETE_PHOTO
             )
         )
-        # TODO: добавить возвращение фото
 
     keyboard.add(
         InlineKeyboardButton(
@@ -90,7 +95,7 @@ async def build_main_message(salert: dict):
         #keyboard.add(*[InlineKeyboardButton(text=button["title"], url=button["link"]) for button in salert['buttons']])
 
     if salert['text'] is not None:
-        keyboard.add(InlineKeyboardButton(text='Предпросмотр', callback_data='alert_creator preview'))
+        keyboard.add(InlineKeyboardButton(text='Предпросмотр', callback_data='salert_creators preview'))
         text = f'<b>Конструктор рассылок по таймеру</b>\n\nТекст уведомления:\n{salert["text"]}\n\nВыберите дальнейшее действие:'
     else:
         text = '<b>Конструктор рассылок по таймеру</b>\n\nВыберите дальнейшее действие:'
@@ -109,4 +114,4 @@ async def build_main_message(salert: dict):
     if await can_finish(salert):
         keyboard.add(InlineKeyboardButton(text='Создать', callback_data='reset_status'))
 
-    return text, keyboard, photo
+    return text, keyboard, salert['photo']
