@@ -482,3 +482,24 @@ async def salert_creator_preview_full(call: CallbackQuery):
     else:
         await call.message.edit_caption(text, parse_mode='HTML', reply_markup=keyboard)
     await call.answer()
+
+
+@dp.callback_query_handler(lambda call: SET_SALERT_NAME in call.data)
+@accessor(1)
+async def salert_creator_url_button(call: CallbackQuery):
+    await usercoll.update_one({'id': call.from_user.id},
+                              {'$set': {'status.0': f'{WRITING_SALERT_NAME}'}})
+    user = await usercoll.find_one({'id': call.from_user.id})
+    keyboard = InlineKeyboardMarkup(row_width=1)
+    keyboard.add(InlineKeyboardButton(text='Назад', callback_data=PATH_MAIN))
+    if user['salert']['photo'] is None:
+        await call.message.edit_text('Введите ЛЮБОЕ уникальное имя отложенной рассылки. Это имя только для администраторов.',
+                                     reply_markup=keyboard)
+    else:
+        await call.message.delete()
+        msg = await bot.send_message(call.from_user.id,
+                                     'Введите ЛЮБОЕ уникальное имя отложенной рассылки. Это имя только для администраторов.',
+                                     reply_markup=keyboard)
+        await usercoll.update_one({'id': call.from_user.id}, {'$set': {'status.1': msg.message_id}})
+    await call.answer()
+

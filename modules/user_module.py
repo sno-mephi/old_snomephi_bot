@@ -246,6 +246,21 @@ async def parse_text_message(message: Message):
                 await usercoll.update_one({'id': message.from_user.id}, {'$set': {'status.1': msg.message_id}})
             await message.delete()
 
+        elif user['status'][0] == WRITING_SALERT_NAME:
+            user['status'][0] = PATH_MAIN
+            user['salert']['name'] = message.text
+            await usercoll.update_one({'id': message.from_user.id}, user)
+            text, keyboard, photo = await build_main_message(user['salert'])
+            if photo is None:
+                await bot.edit_message_text(chat_id=message.from_user.id, message_id=user['status'][1], text=text,
+                                            parse_mode='HTML', reply_markup=keyboard)
+            else:
+                await bot.delete_message(message.from_user.id, user['status'][1])
+                msg = await bot.send_photo(message.from_user.id, photo, text, parse_mode="HTML", reply_markup=keyboard)
+                await usercoll.update_one({'id': message.from_user.id}, {'$set': {'status.1': msg.message_id}})
+            await message.delete()
+
+
     elif user is not None and 'name' not in user:
         keyboard = InlineKeyboardMarkup(row_width=1)
         keyboard.add(InlineKeyboardButton(text='Все верно', callback_data='reg_successful'),
