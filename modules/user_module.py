@@ -273,7 +273,7 @@ async def parse_text_message(message: Message):
         num = (await usercoll.find_one({'id': -1}))['content']
         await usercoll.update_one({'id': -1}, {'$set': {'content': num + 1}})
         msg = await bot.send_message(channel_id,
-                                     f'#вопрос №{num + 1}\n<b>Пользователь:</b> {user["name"]}\n<b>Текст обращения:</b> {message.text}\n\n<b>Время обращения: </b>{time.ctime(time.time() + 3600 * 3)}',
+                                     f'#вопрос №{num + 1}\n<b>Пользователь:</b> {user["name"]}\n<b>Текст обращения:</b> {message.text}\n\n<b>Время обращения: </b>{time.ctime(time.time())}',
                                      parse_mode='HTML')
         keyboard = InlineKeyboardMarkup(row_width=1)
         keyboard.add(
@@ -309,12 +309,12 @@ async def parse_doc_message(message: Message):
         if not message.caption:
             msg = await bot.send_document(channel_id, document=InputFile(f'db/{message.document.file_name}',
                                                                          filename=message.document.file_name),
-                                          caption=f'#вопрос №{num + 1}\n<b>Пользователь:</b> {user["name"]}\n<b>Время обращения: </b>{time.ctime(time.time() + 3600 * 3)}',
+                                          caption=f'#вопрос №{num + 1}\n<b>Пользователь:</b> {user["name"]}\n<b>Время обращения: </b>{time.ctime(time.time())}',
                                           parse_mode='HTML')
         else:
             msg = await bot.send_document(channel_id, document=InputFile(f'db/{message.document.file_name}',
                                                                          filename=message.document.file_name),
-                                          caption=f'#вопрос №{num + 1}\n<b>Пользователь:</b> {user["name"]}\n<b>Текст обращения:</b> {message.caption}\n\n<b>Время обращения: </b>{time.ctime(time.time() + 3600 * 3)}',
+                                          caption=f'#вопрос №{num + 1}\n<b>Пользователь:</b> {user["name"]}\n<b>Текст обращения:</b> {message.caption}\n\n<b>Время обращения: </b>{time.ctime(time.time())}',
                                           parse_mode='HTML')
         keyboard = InlineKeyboardMarkup(row_width=1)
         keyboard.add(InlineKeyboardButton(text='Связаться анонимно',

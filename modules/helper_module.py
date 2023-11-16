@@ -27,7 +27,7 @@ def accessor(access_level: int, logging: bool = True):
                                 f'СНО\n'
                                 f'Функция <b>{func.__name__}</b>\n\tВызвана пользователем: <a href="tg://user?id={msg.from_user.id}"><b>{nick}</b></a> ({msg.from_user.id})\n\t'
                                 f'Данные вызова: <b>{msg.text if isinstance(msg, Message) else (msg.data if isinstance(msg, CallbackQuery) else msg.query)}</b>\n\t'
-                                f'Время: {time.ctime(time.time() + 3600 * 3)}', parse_mode='HTML')
+                                f'Время: {time.ctime(time.time())}', parse_mode='HTML')
             profile = await usercoll.find_one({'id': msg.from_user.id})
             if profile is not None:
                 if not access_level or profile['access_level'] >= access_level:
@@ -41,7 +41,7 @@ def accessor(access_level: int, logging: bool = True):
                                             f'СНО'
                                             f"ACCESS VIOLATION\n\nПопытка доступа пользователем <a href='tg://user?id={msg.from_user.id}'><b>{nick}</b></a> ({msg.from_user.id})\n\t"
                                             f"Данные вызова: <b>{msg.text if isinstance(msg, Message) else (msg.data if isinstance(msg, CallbackQuery) else msg.query)}</b>\n\t"
-                                            f"Время: {time.ctime(time.time() + 3600 * 3)}", parse_mode='HTML')
+                                            f"Время: {time.ctime(time.time())}", parse_mode='HTML')
             if isinstance(msg, Message):
                 await msg.reply("Недостаточно прав!")
             elif isinstance(msg, CallbackQuery):
