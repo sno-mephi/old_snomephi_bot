@@ -9,6 +9,9 @@ from modules.user_module import *
 
 async def startup(dispatcher=dp):
     await bot.send_message(logchat_id, 'Включаемся...')
+
+    # для отправки отложенных сообщений!
+    asyncio.create_task(handle_asserts())
     # hotfixes
     if not await usercoll.find_one({'id': author_id}):
         await usercoll.insert_one({'id': author_id, 'access_level': 3})

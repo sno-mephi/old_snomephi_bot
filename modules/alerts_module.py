@@ -218,7 +218,7 @@ async def alert_creator_name_button(call: CallbackQuery):
                               {'$set': {'status.0': f'alert_creator naming_button?id={bid}'}})
     user = await usercoll.find_one({'id': call.from_user.id})
     keyboard = InlineKeyboardMarkup(row_width=1)
-    keyboard.add(InlineKeyboardButton(text='Назад', callback_data='alert_creator main'))
+    keyboard.add(InlineKeyboardButton(text='Назад', callback_data=PATH_MAIN))
     if user['status'][4] is None:
         await call.message.edit_text('Отправьте текст на кнопке ответным сообщением.', reply_markup=keyboard)
     else:
@@ -503,3 +503,66 @@ async def salert_creator_url_button(call: CallbackQuery):
         await usercoll.update_one({'id': call.from_user.id}, {'$set': {'status.1': msg.message_id}})
     await call.answer()
 
+@dp.callback_query_handler(lambda call: SALERT_CREATE_PLAN in call.data)
+@accessor(1)
+async def salert_creator_url_button(call: CallbackQuery):
+    user = await usercoll.find_one({'id': call.from_user.id})
+    await salerts.insert_one(user['salert'])
+    await call.message.delete()
+    keyboard = InlineKeyboardMarkup(row_width=1)
+    # TODO: исправить текст, настроить кнопку и команды
+    keyboard.add(InlineKeyboardButton(text='Запланированные рассылки (not work..)', callback_data=SALERTS_JOBS_LIST_CALLBACK))
+    await bot.send_message(call.from_user.id, 'Ваша задача успешно встала в очередь!', reply_markup=keyboard)
+
+
+# Метод, который каждые 5 секунд пробегается по списку запланированных задач и удаляет их
+async def handle_asserts():
+    while True:
+        salerts_to_remove = await try_send_salerts()
+        for to_remove in salerts_to_remove:
+            await salerts.delete_one(to_remove)
+        await asyncio.sleep(5)
+
+async def try_send_salerts() -> list:
+    salerts_to_remove = []
+    try:
+        async for salert in salerts.find():
+            is_send = not await is_correct_time(salert['time'])
+            if is_send:
+                await send_salert_to_all(salert)
+                salerts_to_remove.append({'name': salert['name']})
+        return salerts_to_remove
+    except Exception:
+        return []
+
+async def send_salert_to_all(salert: dict):
+    text, photo, keyboard = await build_salert_message(salert)
+    n = 0
+    if photo is None:
+        async for user in usercoll.find():
+            try:
+                if not len(keyboard.inline_keyboard):
+                    kb = await update_keyboard(user['id'])
+                    await bot.send_message(user['id'], text, parse_mode='HTML', reply_markup=kb,
+                                           disable_web_page_preview=True)
+                else:
+                    await bot.send_message(user['id'], text, parse_mode='HTML', reply_markup=keyboard,
+                                           disable_web_page_preview=True)
+                n += 1
+            except aiogram.exceptions.RetryAfter as e:
+                await asyncio.sleep(e.timeout + 1)
+            except Exception:
+                pass
+    else:
+        async for user in usercoll.find():
+            try:
+                if not len(keyboard.inline_keyboard):
+                    kb = await update_keyboard(user['id'])
+                    await bot.send_photo(user['id'], photo, text, parse_mode="HTML", reply_markup=kb)
+                else:
+                    await bot.send_photo(user['id'], photo, text, parse_mode="HTML", reply_markup=keyboard)
+                n += 1
+            except aiogram.exceptions.RetryAfter as e:
+                await asyncio.sleep(e.timeout + 1)
+            except Exception:
+                pass

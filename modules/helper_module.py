@@ -6,6 +6,7 @@ from initializer import *
 # admin_module segment
 async def db_save():
     await usercoll.save()
+    await salerts.save()
 
 
 async def db_reload():
@@ -18,7 +19,7 @@ def accessor(access_level: int, logging: bool = True):
     def accessor_inner(func: FunctionType):
         async def wrapper(*args):
             msg = args[0]
-            if not (isinstance(msg, Message) or isinstance(msg, CallbackQuery) or isinstance(msg, InlineQuery)): 
+            if not (isinstance(msg, Message) or isinstance(msg, CallbackQuery) or isinstance(msg, InlineQuery)):
                 return None
             if logging:
                 nick = msg.from_user.first_name.replace('<', '&lt;').replace('>', '&gt;')
