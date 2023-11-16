@@ -16,6 +16,9 @@ STATUS_WRITING_TEXT = 'salert_creator writing text'
 STATUS_NAMING_BUTTON = 'salert naming but'
 STATUS_LINKING_BUTTON = 'salert linking but'
 STATUS_SENDING_TIME = 'salert sending time'
+SET_SALERT_NAME = 'salerts set job name'
+WRITING_SALERT_NAME = 'job waiting salert name'
+SALERT_CREATE_PLAN = 'salert planning add'
 
 
 # проверяет что строка удовлетворяет формату "dd.mm.yyyy hh:mm"
@@ -25,12 +28,13 @@ async def is_valid_time(input_str) -> bool:
         return True
     except ValueError:
         return False
+    except Exception:
+        return False
 
 
 # Обязательно: имя салерта и дата должны быть указаны для его создания, дата должна быть корректной
 async def can_finish(salert: dict) -> bool:
     return ((salert['text'] is not None) or (salert['photo'] is not None)) \
-        and salert['name'] is not None \
         and salert['time'] is not None \
         and await is_correct_time(salert['time'])
 
@@ -39,10 +43,13 @@ async def can_finish(salert: dict) -> bool:
 async def is_correct_time(time_str: str) -> bool:
     if time_str is None:
         return False
-    given_date = datetime.strptime(time_str, "%d.%m.%Y %H:%M")
-    moscow_timezone = pytz.timezone('Europe/Moscow')
-    current_date = datetime.now(moscow_timezone)
-    given_date = moscow_timezone.localize(given_date)
+    try:
+        given_date = datetime.strptime(time_str, "%d.%m.%Y %H:%M")
+        moscow_timezone = pytz.timezone('Europe/Moscow')
+        current_date = datetime.now(moscow_timezone)
+        given_date = moscow_timezone.localize(given_date)
+    except Exception:
+        return False
     return current_date < given_date
 
 
@@ -96,9 +103,9 @@ async def build_main_message(salert: dict):
 
     if salert['text'] is not None:
         keyboard.add(InlineKeyboardButton(text='Предпросмотр', callback_data='salert_creators preview'))
-        text = f'<b>Конструктор рассылок по таймеру</b>\n\nТекст уведомления:\n{salert["text"]}\n\nВыберите дальнейшее действие:'
+        text = f'<b>Конструктор рассылок по таймеру</b>\n\nТекст уведомления:\n{salert["text"]}'
     else:
-        text = '<b>Конструктор рассылок по таймеру</b>\n\nВыберите дальнейшее действие:'
+        text = '<b>Конструктор рассылок по таймеру</b>'
 
     keyboard.add(
         InlineKeyboardButton(
@@ -109,9 +116,15 @@ async def build_main_message(salert: dict):
             callback_data=PATCH_CHANGE_TIME
         )
     )
-    keyboard.add(InlineKeyboardButton(text='Отмена', callback_data='reset_status'))
 
     if await can_finish(salert):
-        keyboard.add(InlineKeyboardButton(text='Создать', callback_data='reset_status'))
+        if salert['name'] is None:
+            keyboard.add(InlineKeyboardButton(text='Установить имя задачи', callback_data=SET_SALERT_NAME))
+        else:
+            keyboard.add(InlineKeyboardButton(text='Опубликовать задачу', callback_data=SALERT_CREATE_PLAN))
+            text += f"\n\nИмя отложенной задачи: {salert['name']}"
 
+    keyboard.add(InlineKeyboardButton(text='Отмена', callback_data='reset_status'))
+
+    text += "\n\nВыберите дальнейшее действие:"
     return text, keyboard, salert['photo']
