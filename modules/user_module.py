@@ -96,7 +96,6 @@ async def notifications_settings(message: Message):
                            reply_markup=await update_keyboard(message.from_user.id))
 
 
-
 @dp.message_handler(lambda message: '/toggle_' in message.text)
 @accessor(0)
 async def tags_toggle(message: Message):
@@ -182,7 +181,8 @@ async def parse_text_message(message: Message):
                 keyboard = InlineKeyboardMarkup(row_width=1)
                 keyboard.add(InlineKeyboardButton(text='Назад', callback_data=PATH_MAIN))
                 new_text = 'Некорректный формат.\nОтправьте ответным сообщением время в формате "dd.mm.yyyy hh:mm"'
-                await bot.edit_message_text(chat_id=message.from_user.id, message_id=user['status'][1], text=new_text, reply_markup=keyboard)
+                await bot.edit_message_text(chat_id=message.from_user.id, message_id=user['status'][1], text=new_text,
+                                            reply_markup=keyboard)
             else:
                 is_valid = await is_correct_time(time_str)
                 if not is_valid:
@@ -196,11 +196,41 @@ async def parse_text_message(message: Message):
                     await usercoll.update_one({'id': message.from_user.id}, {'$set': {'salert': salert}})
                     text, keyboard, photo = await build_main_message(salert)
                     if photo is None:
-                        await bot.edit_message_text(chat_id=message.from_user.id, message_id=user['status'][1], reply_markup=keyboard, text=text, parse_mode='HTML')
+                        await bot.edit_message_text(chat_id=message.from_user.id, message_id=user['status'][1],
+                                                    reply_markup=keyboard, text=text, parse_mode='HTML')
                     else:
                         await message.delete()
-                        msg = await bot.send_photo(message.from_user.id, photo, text, parse_mode='HTML', reply_markup=keyboard)
+                        msg = await bot.send_photo(message.from_user.id, photo, text, parse_mode='HTML',
+                                                   reply_markup=keyboard)
                         await usercoll.update_one({'id': message.from_user.id}, {'$set': {'status.1': msg.message_id}})
+
+        elif STATUS_NAMING_BUTTON in user['status'][0]:
+            bid = int(user['status'][0].split('?id=')[1])
+            user['salert']['buttons'][bid]['title'] = message.text
+            if user['salert']['buttons'][bid]['link'] is None:
+                keyboard = InlineKeyboardMarkup(row_width=1)
+                keyboard.add(InlineKeyboardButton(text='Назад', callback_data='alert_creator main'))
+                await bot.edit_message_text(chat_id=message.from_user.id, message_id=user['status'][1],
+                                            text=f'<b>Текст на кнопке</b>: {message.text}\n\nОтправьте ссылку, на которую должна вести кнопка, ответным сообщением.',
+                                            parse_mode='HTML', reply_markup=keyboard)
+                user['status'][0] = f'{STATUS_LINKING_BUTTON}?id={bid}'
+                await usercoll.update_one({'id': message.from_user.id}, user)
+            else:
+                user['status'][0] = STATUS_CREATOR
+                await usercoll.update_one({'id': message.from_user.id}, user)
+                text, keyboard = await gen_salert_creator_button_preview(message.from_user.id, bid)
+                await bot.edit_message_text(chat_id=message.from_user.id, message_id=user['status'][1], text=text,
+                                            parse_mode='HTML', reply_markup=keyboard)
+            await message.delete()
+        elif STATUS_LINKING_BUTTON in user['status'][0]:
+            bid = int(user['status'][0].split('?id=')[1])
+            user['salert']['buttons'][bid]['link'] = message.text
+            user['status'][0] = STATUS_CREATOR
+            await usercoll.update_one({'id': message.from_user.id}, user)
+            text, keyboard = await gen_salert_creator_button_preview(message.from_user.id, bid)
+            await bot.edit_message_text(chat_id=message.from_user.id, message_id=user['status'][1], text=text,
+                                        parse_mode='HTML', reply_markup=keyboard)
+            await message.delete()
 
     elif user is not None and 'name' not in user:
         keyboard = InlineKeyboardMarkup(row_width=1)
